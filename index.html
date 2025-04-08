@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ArcGIS 3D 平台 (WMTS & 3D BUILDINGS)</title>
     <link rel="stylesheet" href="https://js.arcgis.com/4.31/esri/themes/light/main.css">
-    <script src="https://js.arcgis.com/4.31/"></script>
+    <script src="https://js.arcgis.com/4.31/"></script> {/* */}
     <style>
         html, body, #viewDiv {
             padding: 0;
@@ -71,148 +71,7 @@
         <option value="PHOTO2">正射影像圖</option>
     </select>
 
-    <script>
-        require([
-            "esri/Map",
-            "esri/views/SceneView",
-            "esri/layers/WMTSLayer",
-            "esri/layers/SceneLayer",
-            "esri/widgets/DirectLineMeasurement3D",
-            "esri/widgets/AreaMeasurement3D",
-            "esri/widgets/Home"
-        ], function(Map, SceneView, WMTSLayer, SceneLayer, DirectLineMeasurement3D, AreaMeasurement3D, Home) {
-            const map = new Map({
-                ground: "world-elevation"
-            });
-
-            let currentLayer = new WMTSLayer({
-                url: "https://wmts.nlsc.gov.tw/wmts",
-                activeLayer: { id: "EMAP" },
-                title: "台灣通用電子地圖"
-            });
-            map.add(currentLayer);
-
-            const taipeiLayer = new SceneLayer({
-                url: "https://i3s.nlsc.gov.tw/building/i3s/SceneServer/layers/0",
-                title: "台北市 3D 建築"
-            });
-            map.add(taipeiLayer);
-
-            const newTaipeiLayer = new SceneLayer({
-                url: "https://i3s.nlsc.gov.tw/building/i3s/SceneServer/layers/5",
-                title: "新北市 3D 建築"
-            });
-            map.add(newTaipeiLayer);
-
-            const view = new SceneView({
-                container: "viewDiv",
-                map: map,
-                center: [121.5654, 25.0330],
-                scale: 50000
-            });
-
-            const layerSelect = document.getElementById("layerSelect");
-            const measureButton = document.getElementById("measureButton");
-            const areaMeasureButton = document.getElementById("areaMeasureButton");
-            const taipeiLayerToggle = document.getElementById("taipeiLayerToggle");
-            const newTaipeiLayerToggle = document.getElementById("newTaipeiLayerToggle");
-            let measurementWidget = null;
-            let areaMeasurementWidget = null;
-
-            const homeWidget = new Home({
-                view: view
-            });
-            view.ui.add(homeWidget, "top-left");
-
-            function switchLayer(layerId) {
-                map.remove(currentLayer);
-                currentLayer = new WMTSLayer({
-                    url: "https://wmts.nlsc.gov.tw/wmts",
-                    activeLayer: { id: layerId },
-                    title: layerSelect.options[layerSelect.selectedIndex].text
-                });
-                map.add(currentLayer);
-                console.log(`已切換到圖層：${layerId}`);
-            }
-
-            function startDistanceMeasurement() {
-                if (measurementWidget) {
-                    measurementWidget.destroy();
-                    measurementWidget = null;
-                    measureButton.textContent = "量測距離";
-                    return;
-                }
-                if (areaMeasurementWidget) {
-                    areaMeasurementWidget.destroy();
-                    areaMeasurementWidget = null;
-                    areaMeasureButton.textContent = "量測面積";
-                }
-
-                measurementWidget = new DirectLineMeasurement3D({
-                    view: view
-                });
-                view.ui.add(measurementWidget, {
-                    position: "top-right",
-                    index: 1
-                });
-                measureButton.textContent = "停止量測";
-            }
-
-            function startAreaMeasurement() {
-                if (areaMeasurementWidget) {
-                    areaMeasurementWidget.destroy();
-                    areaMeasurementWidget = null;
-                    areaMeasureButton.textContent = "量測面積";
-                    return;
-                }
-                if (measurementWidget) {
-                    measurementWidget.destroy();
-                    measurementWidget = null;
-                    measureButton.textContent = "量測距離";
-                }
-
-                areaMeasurementWidget = new AreaMeasurement3D({
-                    view: view
-                });
-                view.ui.add(areaMeasurementWidget, {
-                    position: "top-right",
-                    index: 1
-                });
-                areaMeasureButton.textContent = "停止量測";
-            }
-
-            taipeiLayerToggle.addEventListener("change", function() {
-                taipeiLayer.visible = this.checked;
-                console.log(`台北市 3D 建築圖層 ${this.checked ? '顯示' : '隱藏'}`);
-            });
-
-            newTaipeiLayerToggle.addEventListener("change", function() {
-                newTaipeiLayer.visible = this.checked;
-                console.log(`新北市 3D 建築圖層 ${this.checked ? '顯示' : '隱藏'}`);
-            });
-
-            layerSelect.addEventListener("change", function() {
-                switchLayer(this.value);
-            });
-            measureButton.addEventListener("click", startDistanceMeasurement);
-            areaMeasureButton.addEventListener("click", startAreaMeasurement);
-
-            view.when(function() {
-                console.log("初始 3D 場景已加載完成");
-                taipeiLayer.when(function() {
-                    console.log("台北市 3D 建築圖層已載入");
-                }, function(error) {
-                    console.error("載入台北市 SceneLayer 失敗：", error);
-                });
-                newTaipeiLayer.when(function() {
-                    console.log("新北市 3D 建築圖層已載入");
-                }, function(error) {
-                    console.error("載入新北市 SceneLayer 失敗：", error);
-                });
-            }, function(error) {
-                console.error("加載初始場景失敗：", error);
-            });
-        });
-    </script>
+    {/* */}
+    <script src="arcgis_api.js"></script>
 </body>
 </html>
