@@ -88,8 +88,9 @@
             "esri/layers/FeatureLayer",
             "esri/widgets/DirectLineMeasurement3D",
             "esri/widgets/AreaMeasurement3D",
-            "esri/widgets/Home"
-        ], function(Map, SceneView, WMTSLayer, WMSLayer, SceneLayer, FeatureLayer, DirectLineMeasurement3D, AreaMeasurement3D, Home) {
+            "esri/widgets/Home",
+            "esri/symbols/WebStyleSymbol"
+        ], function(Map, SceneView, WMTSLayer, WMSLayer, SceneLayer, FeatureLayer, DirectLineMeasurement3D, AreaMeasurement3D, Home, WebStyleSymbol) {
             // 初始化地圖並設定世界高程
             const map = new Map({
                 ground: "world-elevation"
@@ -123,28 +124,28 @@
                 title: "台北樹木",
                 renderer: {
                     type: "simple",
+                    symbol: new WebStyleSymbol({
+                        name: "Deciduous_Tree", // 使用 ArcGIS 的樹木樣式（可改為其他樣式）
+                        styleName: "EsriRealisticTreesStyle"
+                    })
+                    // 如果你有紅橡樹的 glTF 模型，可以使用以下方式：
+                    /*
                     symbol: {
                         type: "point-3d",
                         symbolLayers: [{
                             type: "object",
-                            resource: { primitive: "Red Hickory" }, // 預設圓柱體表示樹木
+                            resource: { href: "https://your-server.com/red-hickory.gltf" },
                             width: 5,
                             height: 10,
                             depth: 5,
                             anchor: "bottom"
-                        }],
-                        verticalOffset: {
-                            screenLength: 10
-                        },
-                        callout: {
-                            type: "line",
-                            size: 0.5,
-                            color: [0, 0, 0]
-                        }
+                        }]
                     }
+                    */
                 },
                 elevationInfo: {
-                    mode: "relative-to-ground" // 確保樹木顯示在正確高度
+                    mode: "relative-to-ground", // 樹木貼在地形上，模擬基準高度
+                    offset: 0 // 可調整偏移量（單位：米）
                 }
             });
             map.add(treeLayer);
