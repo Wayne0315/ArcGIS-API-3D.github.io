@@ -64,6 +64,7 @@
     <div id="layerControls">
         <label><input type="checkbox" id="taipeiLayerToggle" checked> 台北市 3D 建築</label>
         <label><input type="checkbox" id="newTaipeiLayerToggle" checked> 新北市 3D 建築</label>
+        <label><input type="checkbox" id="treeLayerToggle" checked> 台北樹木</label>
         <label><input type="checkbox" id="cityLayerToggle" checked> 縣市界</label>
         <label><input type="checkbox" id="townLayerToggle"> 鄉鎮區界</label>
         <label><input type="checkbox" id="villageLayerToggle"> 村里界</label>
@@ -84,10 +85,11 @@
             "esri/layers/WMTSLayer",
             "esri/layers/WMSLayer",
             "esri/layers/SceneLayer",
+            "esri/layers/FeatureLayer",
             "esri/widgets/DirectLineMeasurement3D",
             "esri/widgets/AreaMeasurement3D",
             "esri/widgets/Home"
-        ], function(Map, SceneView, WMTSLayer, WMSLayer, SceneLayer, DirectLineMeasurement3D, AreaMeasurement3D, Home) {
+        ], function(Map, SceneView, WMTSLayer, WMSLayer, SceneLayer, FeatureLayer, DirectLineMeasurement3D, AreaMeasurement3D, Home) {
             // 初始化地圖並設定世界高程
             const map = new Map({
                 ground: "world-elevation"
@@ -114,6 +116,38 @@
                 title: "新北市 3D 建築"
             });
             map.add(newTaipeiLayer);
+
+            // 添加台北樹木圖層（FeatureLayer）
+            const treeLayer = new FeatureLayer({
+                url: "https://gisportal.triwra.org.tw/server/rest/services/Hosted/Scene_WFL1/FeatureServer/0",
+                title: "台北樹木",
+                renderer: {
+                    type: "simple",
+                    symbol: {
+                        type: "point-3d",
+                        symbolLayers: [{
+                            type: "object",
+                            resource: { primitive: "cylinder" }, // 預設圓柱體表示樹木
+                            width: 5,
+                            height: 10,
+                            depth: 5,
+                            anchor: "bottom"
+                        }],
+                        verticalOffset: {
+                            screenLength: 10
+                        },
+                        callout: {
+                            type: "line",
+                            size: 0.5,
+                            color: [0, 0, 0]
+                        }
+                    }
+                },
+                elevationInfo: {
+                    mode: "absolute-height" // 確保樹木顯示在正確高度
+                }
+            });
+            map.add(treeLayer);
 
             // 添加 WMS 圖層，使用官方 WMS 服務
             const cityLayer = new WMSLayer({
@@ -194,6 +228,7 @@
             const areaMeasureButton = document.getElementById("areaMeasureButton");
             const taipeiLayerToggle = document.getElementById("taipeiLayerToggle");
             const newTaipeiLayerToggle = document.getElementById("newTaipeiLayerToggle");
+            const treeLayerToggle = document.getElementById("treeLayerToggle");
             const cityLayerToggle = document.getElementById("cityLayerToggle");
             const townLayerToggle = document.getElementById("townLayerToggle");
             const villageLayerToggle = document.getElementById("villageLayerToggle");
@@ -218,19 +253,11 @@
                         title: layerSelect.options[layerSelect.selectedIndex].text
                     });
                     map.add(currentLayer);
-                    // 重新添加 WMS 和 3D 圖層以確保順序
-                    map.add(roadlayer);
-                    map.add(contourlayer);
-                    map.add(cityLayer);
-                    map.add(townLayer);
-                    map.add(villageLayer);
-                    map.add(taipeiLayer);
-                    map.add(newTaipeiLayer);
                     console.log(`已切換到圖層：${layerId}`);
                 } catch (error) {
                     console.error(`切換圖層 ${layerId} 失敗：`, error);
                     currentLayer = new WMTSLayer({
-                        url: "https://wmts.nlsc.gov.tw/wms",
+                        url: "https://wmts.nlsc.gov.tw/wmts",
                         activeLayer: { id: "EMAP" },
                         title: "臺灣通用電子地圖"
                     });
@@ -266,8 +293,8 @@
             // 開始面積量測
             function startAreaMeasurement() {
                 if (areaMeasurementWidget) {
-                    measurementWidget.destroy();
-                    measurementWidget = null;
+                    areaMeasurementWidget.destroy();
+                    areaMeasurementWidget = null;
                     areaMeasureButton.textContent = "量測面積";
                     return;
                 }
@@ -298,6 +325,11 @@
                 console.log(`新北市 3D 建築圖層 ${this.checked ? '顯示' : '隱藏'}`);
             });
 
+            treeLayerToggle.addEventListener("change", function() {
+                treeLayer.visible = this.checked;
+                console.log(`台北樹木圖層 ${this.checked ? '顯示' : '隱藏'}`);
+            });
+
             cityLayerToggle.addEventListener("change", function() {
                 cityLayer.visible = this.checked;
                 console.log(`縣市界圖層 ${this.checked ? '顯示' : '隱藏'}`);
@@ -317,11 +349,11 @@
                 contourLayer.visible = this.checked;
                 console.log(`等高線圖層 ${this.checked ? '顯示' : '隱藏'}`);
             });
+
             roadLayerToggle.addEventListener("change", function() {
                 roadLayer.visible = this.checked;
                 console.log(`道路路網圖層 ${this.checked ? '顯示' : '隱藏'}`);
             });
-
 
             // WMTS 圖層選擇監聽
             layerSelect.addEventListener("change", function() {
@@ -344,6 +376,11 @@
                     console.log("新北市 3D 建築圖層已載入，狀態：", newTaipeiLayer.loaded);
                 }, function(error) {
                     console.error("載入新北市 SceneLayer 失敗：", error.message, error.details);
+                });
+                treeLayer.when(function() {
+                    console.log("台北樹木圖層已載入，狀態：", treeLayer.loaded);
+                }, function(error) {
+                    console.error("載入台北樹木 FeatureLayer 失敗：", error.message, error.details);
                 });
                 cityLayer.when(function() {
                     console.log("縣市界圖層已載入，狀態：", cityLayer.loaded, "可見性：", cityLayer.visible);
