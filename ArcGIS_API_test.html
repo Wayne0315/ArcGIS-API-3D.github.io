@@ -67,6 +67,8 @@
         <label><input type="checkbox" id="cityLayerToggle" checked> 縣市界</label>
         <label><input type="checkbox" id="townLayerToggle"> 鄉鎮區界</label>
         <label><input type="checkbox" id="villageLayerToggle"> 村里界</label>
+        <label><input type="checkbox" id="contourLayerToggle"> 等高線</label>
+        <label><input type="checkbox" id="roadLayerToggle"> 道路路網</label>
     </div>
     <select id="layerSelect">
         <option value="EMAP">臺灣通用電子地圖</option>
@@ -118,7 +120,7 @@
                 url: "https://wms.nlsc.gov.tw/wms",
                 sublayers: [{ name: "CITY" }],
                 title: "縣市界",
-                opacity: 0.8,
+                opacity: 1,
                 version: "1.1.1",
                 customLayerParameters: {
                     crs: "EPSG:4326"
@@ -130,7 +132,7 @@
                 url: "https://wms.nlsc.gov.tw/wms",
                 sublayers: [{ name: "TOWN" }],
                 title: "鄉鎮區界",
-                opacity: 0.8,
+                opacity: 1,
                 visible: false,
                 version: "1.1.1",
                 customLayerParameters: {
@@ -143,7 +145,7 @@
                 url: "https://wms.nlsc.gov.tw/wms",
                 sublayers: [{ name: "Village" }],
                 title: "村里界",
-                opacity: 0.8,
+                opacity: 1,
                 visible: false,
                 version: "1.1.1",
                 customLayerParameters: {
@@ -151,6 +153,32 @@
                 }
             });
             map.add(villageLayer);
+
+            const contourLayer = new WMSLayer({
+                url: "https://wms.nlsc.gov.tw/wms",
+                sublayers: [{ name: "MOI_CONTOUR_2" }],
+                title: "等高線",
+                opacity: 1,
+                visible: false,
+                version: "1.1.1",
+                customLayerParameters: {
+                    crs: "EPSG:4326"
+                }
+            });
+            map.add(contourLayer);
+
+            const roadLayer = new WMSLayer({
+                url: "https://wms.nlsc.gov.tw/wms",
+                sublayers: [{ name: "ROAD" }],
+                title: "道路路網",
+                opacity: 1,
+                visible: false,
+                version: "1.1.1",
+                customLayerParameters: {
+                    crs: "EPSG:4326"
+                }
+            });
+            map.add(roadLayer);
 
             // 初始化 3D 場景視圖
             const view = new SceneView({
@@ -169,6 +197,8 @@
             const cityLayerToggle = document.getElementById("cityLayerToggle");
             const townLayerToggle = document.getElementById("townLayerToggle");
             const villageLayerToggle = document.getElementById("villageLayerToggle");
+            const contourLayerToggle = document.getElementById("contourLayerToggle");
+            const roadLayerToggle = document.getElementById("roadLayerToggle");
             let measurementWidget = null;
             let areaMeasurementWidget = null;
 
@@ -189,6 +219,8 @@
                     });
                     map.add(currentLayer);
                     // 重新添加 WMS 和 3D 圖層以確保順序
+                    map.add(roadlayer);
+                    map.add(contourlayer);
                     map.add(cityLayer);
                     map.add(townLayer);
                     map.add(villageLayer);
@@ -281,6 +313,16 @@
                 console.log(`村里界圖層 ${this.checked ? '顯示' : '隱藏'}`);
             });
 
+            contourLayerToggle.addEventListener("change", function() {
+                contourLayer.visible = this.checked;
+                console.log(`等高線圖層 ${this.checked ? '顯示' : '隱藏'}`);
+            });
+            roadLayerToggle.addEventListener("change", function() {
+                roadLayer.visible = this.checked;
+                console.log(`道路路網圖層 ${this.checked ? '顯示' : '隱藏'}`);
+            });
+
+
             // WMTS 圖層選擇監聽
             layerSelect.addEventListener("change", function() {
                 switchLayer(this.value);
@@ -317,6 +359,16 @@
                     console.log("村里界圖層已載入，狀態：", villageLayer.loaded, "可見性：", villageLayer.visible);
                 }, function(error) {
                     console.error("載入村里界 WMS 失敗：", error.message, error.details);
+                });
+                contourLayer.when(function() {
+                    console.log("等高線圖層已載入，狀態：", contourLayer.loaded, "可見性：", contourLayer.visible);
+                }, function(error) {
+                    console.error("載入等高線 WMS 失敗：", error.message, error.details);
+                });
+                roadLayer.when(function() {
+                    console.log("道路路網圖層已載入，狀態：", roadLayer.loaded, "可見性：", roadLayer.visible);
+                }, function(error) {
+                    console.error("載入道路路網 WMS 失敗：", error.message, error.details);
                 });
             }, function(error) {
                 console.error("加載初始場景失敗：", error);
