@@ -115,21 +115,21 @@
 
             // 村里界 KML 圖層
             const villageLayer = new KMLLayer({
-                url: "http://localhost/Data/村里界.kml", // 替換為你的實際 KML 文件 URL
+                url: "http://localhost:8000/Data/村里界.kml", // 替換為你的實際 KML 文件 URL
                 title: "村里界"
             });
             map.add(villageLayer);
 
             // 縣市界 KML 圖層
             const countyLayer = new KMLLayer({
-                url: "http://localhost/Data/縣市界.kml", // 替換為你的實際 KML 文件 URL
+                url: "http://localhost:8000/Data/縣市界.kml", // 替換為你的實際 KML 文件 URL
                 title: "縣市界"
             });
             map.add(countyLayer);
 
             // 鄉鎮界 KML 圖層
             const townLayer = new KMLLayer({
-                url: "http://localhost/Data/鄉鎮界.kml", // 替換為你的實際 KML 文件 URL
+                url: "http://localhost:8000/Data/鄉鎮界.kml", // 替換為你的實際 KML 文件 URL
                 title: "鄉鎮界"
             });
             map.add(townLayer);
