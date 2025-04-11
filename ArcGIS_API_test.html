@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ArcGIS 3D 平台 (WMTS & 3D BUILDINGS)</title>
+    <title>ArcGIS 3D 平台 (WMTS, WMS & 3D BUILDINGS)</title>
     <link rel="stylesheet" href="https://js.arcgis.com/4.31/esri/themes/light/main.css">
     <script src="https://js.arcgis.com/4.31/"></script>
     <style>
@@ -64,6 +64,9 @@
     <div id="layerControls">
         <label><input type="checkbox" id="taipeiLayerToggle" checked> 台北市 3D 建築</label>
         <label><input type="checkbox" id="newTaipeiLayerToggle" checked> 新北市 3D 建築</label>
+        <label><input type="checkbox" id="cityLayerToggle" checked> 縣市界</label>
+        <label><input type="checkbox" id="townLayerToggle"> 鄉鎮區界</label>
+        <label><input type="checkbox" id="villageLayerToggle"> 村里界</label>
     </div>
     <select id="layerSelect">
         <option value="EMAP">臺灣通用電子地圖</option>
@@ -77,17 +80,18 @@
             "esri/Map",
             "esri/views/SceneView",
             "esri/layers/WMTSLayer",
+            "esri/layers/WMSLayer",
             "esri/layers/SceneLayer",
             "esri/widgets/DirectLineMeasurement3D",
             "esri/widgets/AreaMeasurement3D",
             "esri/widgets/Home"
-        ], function(Map, SceneView, WMTSLayer, SceneLayer, DirectLineMeasurement3D, AreaMeasurement3D, Home) {
-            // Initialize the map with world elevation ground
+        ], function(Map, SceneView, WMTSLayer, WMSLayer, SceneLayer, DirectLineMeasurement3D, AreaMeasurement3D, Home) {
+            // 初始化地圖並設定世界高程
             const map = new Map({
                 ground: "world-elevation"
             });
 
-            // Initialize the base WMTS layer
+            // 初始化 WMTS 底圖
             let currentLayer = new WMTSLayer({
                 url: "https://wmts.nlsc.gov.tw/wmts",
                 activeLayer: { id: "EMAP" },
@@ -95,21 +99,60 @@
             });
             map.add(currentLayer);
 
-            // Add Taipei 3D buildings layer
+            // 添加台北市 3D 建築圖層
             const taipeiLayer = new SceneLayer({
                 url: "https://i3s.nlsc.gov.tw/building/i3s/SceneServer/layers/0",
                 title: "台北市 3D 建築"
             });
             map.add(taipeiLayer);
 
-            // Add New Taipei 3D buildings layer
+            // 添加新北市 3D 建築圖層
             const newTaipeiLayer = new SceneLayer({
                 url: "https://i3s.nlsc.gov.tw/building/i3s/SceneServer/layers/5",
                 title: "新北市 3D 建築"
             });
             map.add(newTaipeiLayer);
 
-            // Initialize the 3D scene view
+            // 添加 WMS 圖層，使用官方 WMS 服務
+            const cityLayer = new WMSLayer({
+                url: "https://wms.nlsc.gov.tw/wms",
+                sublayers: [{ name: "CITY" }],
+                title: "縣市界",
+                opacity: 0.8,
+                version: "1.1.1",
+                customLayerParameters: {
+                    crs: "EPSG:4326"
+                }
+            });
+            map.add(cityLayer);
+
+            const townLayer = new WMSLayer({
+                url: "https://wms.nlsc.gov.tw/wms",
+                sublayers: [{ name: "TOWN" }],
+                title: "鄉鎮區界",
+                opacity: 0.8,
+                visible: false,
+                version: "1.1.1",
+                customLayerParameters: {
+                    crs: "EPSG:4326"
+                }
+            });
+            map.add(townLayer);
+
+            const villageLayer = new WMSLayer({
+                url: "https://wms.nlsc.gov.tw/wms",
+                sublayers: [{ name: "VILLAGE" }],
+                title: "村里界",
+                opacity: 0.8,
+                visible: false,
+                version: "1.1.1",
+                customLayerParameters: {
+                    crs: "EPSG:4326"
+                }
+            });
+            map.add(villageLayer);
+
+            // 初始化 3D 場景視圖
             const view = new SceneView({
                 container: "viewDiv",
                 map: map,
@@ -117,22 +160,25 @@
                 scale: 50000
             });
 
-            // Get DOM elements
+            // 獲取 DOM 元素
             const layerSelect = document.getElementById("layerSelect");
             const measureButton = document.getElementById("measureButton");
             const areaMeasureButton = document.getElementById("areaMeasureButton");
             const taipeiLayerToggle = document.getElementById("taipeiLayerToggle");
             const newTaipeiLayerToggle = document.getElementById("newTaipeiLayerToggle");
+            const cityLayerToggle = document.getElementById("cityLayerToggle");
+            const townLayerToggle = document.getElementById("townLayerToggle");
+            const villageLayerToggle = document.getElementById("villageLayerToggle");
             let measurementWidget = null;
             let areaMeasurementWidget = null;
 
-            // Add Home widget
+            // 添加 Home 小部件
             const homeWidget = new Home({
                 view: view
             });
             view.ui.add(homeWidget, "top-left");
 
-            // Function to switch WMTS layer
+            // 切換 WMTS 底圖函數
             function switchLayer(layerId) {
                 try {
                     map.remove(currentLayer);
@@ -142,12 +188,17 @@
                         title: layerSelect.options[layerSelect.selectedIndex].text
                     });
                     map.add(currentLayer);
+                    // 重新添加 WMS 和 3D 圖層以確保順序
+                    map.add(cityLayer);
+                    map.add(townLayer);
+                    map.add(villageLayer);
+                    map.add(taipeiLayer);
+                    map.add(newTaipeiLayer);
                     console.log(`已切換到圖層：${layerId}`);
                 } catch (error) {
                     console.error(`切換圖層 ${layerId} 失敗：`, error);
-                    // Revert to default layer if switching fails
                     currentLayer = new WMTSLayer({
-                        url: "https://wmts.nlsc.gov.tw/wmts",
+                        url: "https://wmts.nlsc.gov.tw/wms",
                         activeLayer: { id: "EMAP" },
                         title: "臺灣通用電子地圖"
                     });
@@ -156,7 +207,7 @@
                 }
             }
 
-            // Function to start distance measurement
+            // 開始距離量測
             function startDistanceMeasurement() {
                 if (measurementWidget) {
                     measurementWidget.destroy();
@@ -180,11 +231,11 @@
                 measureButton.textContent = "停止量測";
             }
 
-            // Function to start area measurement
+            // 開始面積量測
             function startAreaMeasurement() {
                 if (areaMeasurementWidget) {
-                    areaMeasurementWidget.destroy();
-                    areaMeasurementWidget = null;
+                    measurementWidget.destroy();
+                    measurementWidget = null;
                     areaMeasureButton.textContent = "量測面積";
                     return;
                 }
@@ -204,39 +255,68 @@
                 areaMeasureButton.textContent = "停止量測";
             }
 
-            // Event listener for Taipei layer toggle
+            // 圖層切換事件監聽
             taipeiLayerToggle.addEventListener("change", function() {
                 taipeiLayer.visible = this.checked;
                 console.log(`台北市 3D 建築圖層 ${this.checked ? '顯示' : '隱藏'}`);
             });
 
-            // Event listener for New Taipei layer toggle
             newTaipeiLayerToggle.addEventListener("change", function() {
                 newTaipeiLayer.visible = this.checked;
                 console.log(`新北市 3D 建築圖層 ${this.checked ? '顯示' : '隱藏'}`);
             });
 
-            // Event listener for layer selection
+            cityLayerToggle.addEventListener("change", function() {
+                cityLayer.visible = this.checked;
+                console.log(`縣市界圖層 ${this.checked ? '顯示' : '隱藏'}`);
+            });
+
+            townLayerToggle.addEventListener("change", function() {
+                townLayer.visible = this.checked;
+                console.log(`鄉鎮區界圖層 ${this.checked ? '顯示' : '隱藏'}`);
+            });
+
+            villageLayerToggle.addEventListener("change", function() {
+                villageLayer.visible = this.checked;
+                console.log(`村里界圖層 ${this.checked ? '顯示' : '隱藏'}`);
+            });
+
+            // WMTS 圖層選擇監聽
             layerSelect.addEventListener("change", function() {
                 switchLayer(this.value);
             });
 
-            // Event listeners for measurement buttons
+            // 量測按鈕監聽
             measureButton.addEventListener("click", startDistanceMeasurement);
             areaMeasureButton.addEventListener("click", startAreaMeasurement);
 
-            // Handle view initialization
+            // 場景初始化處理
             view.when(function() {
                 console.log("初始 3D 場景已加載完成");
                 taipeiLayer.when(function() {
-                    console.log("台北市 3D 建築圖層已載入");
+                    console.log("台北市 3D 建築圖層已載入，狀態：", taipeiLayer.loaded);
                 }, function(error) {
-                    console.error("載入台北市 SceneLayer 失敗：", error);
+                    console.error("載入台北市 SceneLayer 失敗：", error.message, error.details);
                 });
                 newTaipeiLayer.when(function() {
-                    console.log("新北市 3D 建築圖層已載入");
+                    console.log("新北市 3D 建築圖層已載入，狀態：", newTaipeiLayer.loaded);
                 }, function(error) {
-                    console.error("載入新北市 SceneLayer 失敗：", error);
+                    console.error("載入新北市 SceneLayer 失敗：", error.message, error.details);
+                });
+                cityLayer.when(function() {
+                    console.log("縣市界圖層已載入，狀態：", cityLayer.loaded, "可見性：", cityLayer.visible);
+                }, function(error) {
+                    console.error("載入縣市界 WMS 失敗：", error.message, error.details);
+                });
+                townLayer.when(function() {
+                    console.log("鄉鎮區界圖層已載入，狀態：", townLayer.loaded, "可見性：", townLayer.visible);
+                }, function(error) {
+                    console.error("載入鄉鎮區界 WMS 失敗：", error.message, error.details);
+                });
+                villageLayer.when(function() {
+                    console.log("村里界圖層已載入，狀態：", villageLayer.loaded, "可見性：", villageLayer.visible);
+                }, function(error) {
+                    console.error("載入村里界 WMS 失敗：", error.message, error.details);
                 });
             }, function(error) {
                 console.error("加載初始場景失敗：", error);
