@@ -88,9 +88,8 @@
             "esri/layers/FeatureLayer",
             "esri/widgets/DirectLineMeasurement3D",
             "esri/widgets/AreaMeasurement3D",
-            "esri/widgets/Home",
-            "esri/symbols/WebStyleSymbol"
-        ], function(Map, SceneView, WMTSLayer, WMSLayer, SceneLayer, FeatureLayer, DirectLineMeasurement3D, AreaMeasurement3D, Home, WebStyleSymbol) {
+            "esri/widgets/Home"
+        ], function(Map, SceneView, WMTSLayer, WMSLayer, SceneLayer, FeatureLayer, DirectLineMeasurement3D, AreaMeasurement3D, Home) {
             // 初始化地圖並設定世界高程
             const map = new Map({
                 ground: "world-elevation"
@@ -118,31 +117,10 @@
             });
             map.add(newTaipeiLayer);
 
-            // 添加台北樹木圖層（FeatureLayer）
+            // 添加台北樹木圖層（FeatureLayer），直接使用 Feature Layer 的預定義樣式
             const treeLayer = new FeatureLayer({
                 url: "https://gisportal.triwra.org.tw/server/rest/services/Hosted/Taipei_Tree_WSL1/SceneServer",
                 title: "台北樹木",
-                renderer: {
-                    type: "simple",
-                    symbol: new WebStyleSymbol({
-                        name: "Deciduous_Tree", // 使用 ArcGIS 的樹木樣式（可改為其他樣式）
-                        styleName: "EsriRealisticTreesStyle"
-                    })
-                    // 如果你有紅橡樹的 glTF 模型，可以使用以下方式：
-                    /*
-                    symbol: {
-                        type: "point-3d",
-                        symbolLayers: [{
-                            type: "object",
-                            resource: { href: "https://your-server.com/red-hickory.gltf" },
-                            width: 5,
-                            height: 10,
-                            depth: 5,
-                            anchor: "bottom"
-                        }]
-                    }
-                    */
-                },
                 elevationInfo: {
                     mode: "relative-to-ground", // 樹木貼在地形上，模擬基準高度
                     offset: 0 // 可調整偏移量（單位：米）
