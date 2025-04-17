@@ -71,6 +71,7 @@
         <label><input type="checkbox" id="villageLayerToggle"> 村里界</label>
         <label><input type="checkbox" id="contourLayerToggle"> 等高線</label>
         <label><input type="checkbox" id="roadLayerToggle"> 道路路網</label>
+        <label><input type="checkbox" id="wendiluLayerToggle" checked> 塭底路影像</label>
     </div>
     <select id="layerSelect">
         <option value="EMAP">臺灣通用電子地圖</option>
@@ -87,12 +88,13 @@
             "esri/layers/WMSLayer",
             "esri/layers/SceneLayer",
             "esri/layers/FeatureLayer",
+            "esri/layers/TileLayer",
             "esri/widgets/DirectLineMeasurement3D",
             "esri/widgets/AreaMeasurement3D",
             "esri/widgets/Home",
             "esri/renderers/SimpleRenderer",
             "esri/symbols/WebStyleSymbol"
-        ], function(Map, SceneView, WMTSLayer, WMSLayer, SceneLayer, FeatureLayer, DirectLineMeasurement3D, AreaMeasurement3D, Home, SimpleRenderer, WebStyleSymbol) {
+        ], function(Map, SceneView, WMTSLayer, WMSLayer, SceneLayer, FeatureLayer, TileLayer, DirectLineMeasurement3D, AreaMeasurement3D, Home, SimpleRenderer, WebStyleSymbol) {
             // 初始化地圖並設定世界高程
             const map = new Map({
                 ground: "world-elevation"
@@ -122,11 +124,11 @@
 
             // 添加台北樹木圖層（SceneLayer）
             const treeLayer = new FeatureLayer({
-                url: "https://gisportal.triwra.org.tw/server/rest/services/Hosted/Taipei_Tree_WSL1/SceneServer",
+                url: "https://gisportal.triwra.org.tw/server/rest/services/Hosted/Tree_3D_WSL1/SceneServer",
                 title: "台北樹木",
                 elevationInfo: {
-                    mode: "relative-to-ground", // 樹木貼在地形上，模擬基準高度
-                    offset: 0 // 可調整偏移量（單位：米）
+                    mode: "relative-to-ground",
+                    offset: 0
                 }
             });
             map.add(treeLayer);
@@ -203,6 +205,14 @@
             });
             map.add(roadLayer);
 
+            // 添加塭底路影像圖層（TileLayer）
+            const wendiluLayer = new TileLayer({
+                url: "https://gisportal.triwra.org.tw/server/rest/services/Hosted/20180711_%E5%A1%AD%E5%BA%95%E8%B7%AF%E5%B7%A6%E5%81%B4/MapServer",
+                title: "塭底路影像",
+                opacity: 1
+            });
+            map.add(wendiluLayer);
+
             // 初始化 3D 場景視圖
             const view = new SceneView({
                 container: "viewDiv",
@@ -224,6 +234,7 @@
             const villageLayerToggle = document.getElementById("villageLayerToggle");
             const contourLayerToggle = document.getElementById("contourLayerToggle");
             const roadLayerToggle = document.getElementById("roadLayerToggle");
+            const wendiluLayerToggle = document.getElementById("wendiluLayerToggle");
             let measurementWidget = null;
             let areaMeasurementWidget = null;
 
@@ -350,6 +361,11 @@
                 console.log(`道路路網圖層 ${this.checked ? '顯示' : '隱藏'}`);
             });
 
+            wendiluLayerToggle.addEventListener("change", function() {
+                wendiluLayer.visible = this.checked;
+                console.log(`塭底路影像圖層 ${this.checked ? '顯示' : '隱藏'}`);
+            });
+
             // WMTS 圖層選擇監聽
             layerSelect.addEventListener("change", function() {
                 switchLayer(this.value);
@@ -406,6 +422,11 @@
                     console.log("道路路網圖層已載入，狀態：", roadLayer.loaded, "可見性：", roadLayer.visible);
                 }, function(error) {
                     console.error("載入道路路網 WMS 失敗：", error.message, error.details);
+                });
+                wendiluLayer.when(function() {
+                    console.log("塭底路影像圖層已載入，狀態：", wendiluLayer.loaded, "可見性：", wendiluLayer.visible);
+                }, function(error) {
+                    console.error("載入塭底路影像 TileLayer 失敗：", error.message, error.details);
                 });
             }, function(error) {
                 console.error("加載初始場景失敗：", error);
