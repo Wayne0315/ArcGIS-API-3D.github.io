@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ArcGIS 3D 平台 (WMTS, WMS & 3D BUILDINGS)</title>
-    <link rel="stylesheet" href="https://js.arcgis.com/4.31/esri/themes/light/main.css">
-    <script src="https://js.arcgis.com/4.31/"></script>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.32/"></script>
     <style>
         html, body, #viewDiv {
             padding: 0;
@@ -15,7 +15,7 @@
         }
         #layerSelect {
             position: absolute;
-            top: 650px;
+            top: 10px;
             left: 10px;
             z-index: 1;
             padding: 10px;
@@ -44,7 +44,7 @@
         }
         #layerControls {
             position: absolute;
-            top: 350px;
+            top: 340px;
             left: 10px;
             z-index: 1;
             padding: 10px;
@@ -65,6 +65,7 @@
         <label><input type="checkbox" id="taipeiLayerToggle" checked> 台北市 3D 建築</label>
         <label><input type="checkbox" id="newTaipeiLayerToggle" checked> 新北市 3D 建築</label>
         <label><input type="checkbox" id="treeLayerToggle" checked> 台北樹木</label>
+        <label><input type="checkbox" id="road3DLayerToggle" checked> 台北市3D道路</label>
         <label><input type="checkbox" id="cityLayerToggle" checked> 縣市界</label>
         <label><input type="checkbox" id="townLayerToggle"> 鄉鎮區界</label>
         <label><input type="checkbox" id="villageLayerToggle"> 村里界</label>
@@ -88,8 +89,10 @@
             "esri/layers/FeatureLayer",
             "esri/widgets/DirectLineMeasurement3D",
             "esri/widgets/AreaMeasurement3D",
-            "esri/widgets/Home"
-        ], function(Map, SceneView, WMTSLayer, WMSLayer, SceneLayer, FeatureLayer, DirectLineMeasurement3D, AreaMeasurement3D, Home) {
+            "esri/widgets/Home",
+            "esri/renderers/SimpleRenderer",
+            "esri/symbols/WebStyleSymbol"
+        ], function(Map, SceneView, WMTSLayer, WMSLayer, SceneLayer, FeatureLayer, DirectLineMeasurement3D, AreaMeasurement3D, Home, SimpleRenderer, WebStyleSymbol) {
             // 初始化地圖並設定世界高程
             const map = new Map({
                 ground: "world-elevation"
@@ -117,7 +120,7 @@
             });
             map.add(newTaipeiLayer);
 
-            // 添加台北樹木圖層（FeatureLayer），直接使用 Feature Layer 的預定義樣式
+            // 添加台北樹木圖層（SceneLayer）
             const treeLayer = new FeatureLayer({
                 url: "https://gisportal.triwra.org.tw/server/rest/services/Hosted/Taipei_Tree_WSL1/SceneServer",
                 title: "台北樹木",
@@ -128,7 +131,14 @@
             });
             map.add(treeLayer);
 
-            // 添加 WMS 圖層，使用官方 WMS 服務
+            // 添加台北市 3D 道路圖層
+            const road3DLayer = new SceneLayer({
+                url: "https://i3s.nlsc.gov.tw/road2nd/i3s/SceneServer/layers/0",
+                title: "台北市3D道路"
+            });
+            map.add(road3DLayer);
+
+            // 添加 WMS 圖層
             const cityLayer = new WMSLayer({
                 url: "https://wms.nlsc.gov.tw/wms",
                 sublayers: [{ name: "CITY" }],
@@ -208,6 +218,7 @@
             const taipeiLayerToggle = document.getElementById("taipeiLayerToggle");
             const newTaipeiLayerToggle = document.getElementById("newTaipeiLayerToggle");
             const treeLayerToggle = document.getElementById("treeLayerToggle");
+            const road3DLayerToggle = document.getElementById("road3DLayerToggle");
             const cityLayerToggle = document.getElementById("cityLayerToggle");
             const townLayerToggle = document.getElementById("townLayerToggle");
             const villageLayerToggle = document.getElementById("villageLayerToggle");
@@ -309,6 +320,11 @@
                 console.log(`台北樹木圖層 ${this.checked ? '顯示' : '隱藏'}`);
             });
 
+            road3DLayerToggle.addEventListener("change", function() {
+                road3DLayer.visible = this.checked;
+                console.log(`台北市3D道路圖層 ${this.checked ? '顯示' : '隱藏'}`);
+            });
+
             cityLayerToggle.addEventListener("change", function() {
                 cityLayer.visible = this.checked;
                 console.log(`縣市界圖層 ${this.checked ? '顯示' : '隱藏'}`);
@@ -359,7 +375,12 @@
                 treeLayer.when(function() {
                     console.log("台北樹木圖層已載入，狀態：", treeLayer.loaded);
                 }, function(error) {
-                    console.error("載入台北樹木 FeatureLayer 失敗：", error.message, error.details);
+                    console.error("載入台北樹木 SceneLayer 失敗：", error.message, error.details);
+                });
+                road3DLayer.when(function() {
+                    console.log("台北市3D道路圖層已載入，狀態：", road3DLayer.loaded);
+                }, function(error) {
+                    console.error("載入台北市3D道路 SceneLayer 失敗：", error.message, error.details);
                 });
                 cityLayer.when(function() {
                     console.log("縣市界圖層已載入，狀態：", cityLayer.loaded, "可見性：", cityLayer.visible);
