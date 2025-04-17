@@ -123,12 +123,35 @@
             map.add(newTaipeiLayer);
 
             // 添加台北樹木圖層（SceneLayer）
-            const treeLayer = new FeatureLayer({
+            const treeLayer = new SceneLayer({
                 url: "https://gisportal.triwra.org.tw/server/rest/services/Hosted/Tree_3D_WSL1/SceneServer",
                 title: "台北樹木",
                 elevationInfo: {
-                    mode: "relative-to-ground",
-                    offset: 0
+                    mode: "absolute-height", // 使用絕對高度，基於 height 字段
+                    featureExpressionInfo: {
+                        expression: "geometry.z + $feature.height" // 使用 height 字段設置點高度
+                    },
+                    unit: "meters"
+                },
+                renderer: new SimpleRenderer({
+                    symbol: new WebStyleSymbol({
+                        name: "Deciduous_Tree", // 使用 ArcGIS 的樹木符號
+                        styleName: "EsriRealisticTreesStyle"
+                    })
+                }),
+                popupTemplate: {
+                    title: "台北樹木",
+                    content: [
+                        {
+                            type: "fields",
+                            fieldInfos: [
+                                { fieldName: "縣市", label: "縣市" },
+                                { fieldName: "行政區", label: "行政區" },
+                                { fieldName: "鄉里", label: "鄉里" },
+                                { fieldName: "height", label: "高度 (米)" }
+                            ]
+                        }
+                    ]
                 }
             });
             map.add(treeLayer);
@@ -207,8 +230,8 @@
 
             // 添加塭底路影像圖層（TileLayer）
             const wendiluLayer = new TileLayer({
-                url: "https://gisportal.triwra.org.tw/server/rest/services/Hosted/20180711_%E5%A1%AD%E5%BA%95%E8%B7%AF%E5%B7%A6%E5%81%B4/MapServer",
-                title: "塭底路影像",
+                url: "https://gisportal.triwra.org.tw/server/rest/services/Hosted/20180711_%E5%AE%9C%E8%98%AD%E5%A1%AD%E5%BA%95%E8%B7%AF%E5%90%88%E4%BD%B5/MapServer",
+                title: "宜蘭塭底路UAV影像",
                 opacity: 1
             });
             map.add(wendiluLayer);
@@ -363,7 +386,7 @@
 
             wendiluLayerToggle.addEventListener("change", function() {
                 wendiluLayer.visible = this.checked;
-                console.log(`塭底路影像圖層 ${this.checked ? '顯示' : '隱藏'}`);
+                console.log(`宜蘭塭底路UAV影像 ${this.checked ? '顯示' : '隱藏'}`);
             });
 
             // WMTS 圖層選擇監聽
@@ -424,7 +447,7 @@
                     console.error("載入道路路網 WMS 失敗：", error.message, error.details);
                 });
                 wendiluLayer.when(function() {
-                    console.log("塭底路影像圖層已載入，狀態：", wendiluLayer.loaded, "可見性：", wendiluLayer.visible);
+                    console.log("宜蘭塭底路UAV影像圖層已載入，狀態：", wendiluLayer.loaded, "可見性：", wendiluLayer.visible);
                 }, function(error) {
                     console.error("載入塭底路影像 TileLayer 失敗：", error.message, error.details);
                 });
