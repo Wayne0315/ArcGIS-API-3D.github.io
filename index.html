@@ -15,7 +15,7 @@
         }
         #layerSelect {
             position: absolute;
-            top: 10px;
+            top:560px;
             left: 10px;
             z-index: 1;
             padding: 10px;
@@ -44,7 +44,7 @@
         }
         #layerControls {
             position: absolute;
-            top: 340px;
+            top: 360px;
             left: 10px;
             z-index: 1;
             padding: 10px;
@@ -71,7 +71,7 @@
         <label><input type="checkbox" id="villageLayerToggle"> 村里界</label>
         <label><input type="checkbox" id="contourLayerToggle"> 等高線</label>
         <label><input type="checkbox" id="roadLayerToggle"> 道路路網</label>
-        <label><input type="checkbox" id="wendiluLayerToggle" checked> 塭底路影像</label>
+        <label><input type="checkbox" id="wendiluLayerToggle" checked> 宜蘭塭底路UAV影像</label>
     </div>
     <select id="layerSelect">
         <option value="EMAP">臺灣通用電子地圖</option>
@@ -449,7 +449,7 @@
                 wendiluLayer.when(function() {
                     console.log("宜蘭塭底路UAV影像圖層已載入，狀態：", wendiluLayer.loaded, "可見性：", wendiluLayer.visible);
                 }, function(error) {
-                    console.error("載入塭底路影像 TileLayer 失敗：", error.message, error.details);
+                    console.error("載入宜蘭塭底路UAV影像 TileLayer 失敗：", error.message, error.details);
                 });
             }, function(error) {
                 console.error("加載初始場景失敗：", error);
