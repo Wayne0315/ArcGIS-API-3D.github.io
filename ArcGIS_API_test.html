@@ -124,34 +124,10 @@
 
             // 添加台北樹木圖層（SceneLayer）
             const treeLayer = new SceneLayer({
-                url: "https://gisportal.triwra.org.tw/server/rest/services/Hosted/Tree_3D_WSL1/SceneServer",
+                url: "https://gisportal.triwra.org.tw/server/rest/services/Hosted/%E5%8F%B0%E5%8C%97%E6%A8%B9_3d/SceneServer",
                 title: "台北樹木",
                 elevationInfo: {
-                    mode: "absolute-height", // 使用絕對高度，基於 height 字段
-                    featureExpressionInfo: {
-                        expression: "geometry.z + $feature.height" // 使用 height 字段設置點高度
-                    },
-                    unit: "meters"
-                },
-                renderer: new SimpleRenderer({
-                    symbol: new WebStyleSymbol({
-                        name: "Deciduous_Tree", // 使用 ArcGIS 的樹木符號
-                        styleName: "EsriRealisticTreesStyle"
-                    })
-                }),
-                popupTemplate: {
-                    title: "台北樹木",
-                    content: [
-                        {
-                            type: "fields",
-                            fieldInfos: [
-                                { fieldName: "縣市", label: "縣市" },
-                                { fieldName: "行政區", label: "行政區" },
-                                { fieldName: "鄉里", label: "鄉里" },
-                                { fieldName: "height", label: "高度 (米)" }
-                            ]
-                        }
-                    ]
+                    mode: "on-the-ground" // 將樹木放置在地面上，依據地形高程
                 }
             });
             map.add(treeLayer);
